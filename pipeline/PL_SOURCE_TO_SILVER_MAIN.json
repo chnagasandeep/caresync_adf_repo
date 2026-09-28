@@ -61,7 +61,7 @@
 							"typeProperties": {
 								"variableName": "source_system",
 								"value": {
-									"value": "@item().value",
+									"value": "@item().table_id",
 									"type": "Expression"
 								}
 							}
