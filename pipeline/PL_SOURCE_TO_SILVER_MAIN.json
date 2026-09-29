@@ -50,7 +50,7 @@
 					},
 					"activities": [
 						{
-							"name": "Test",
+							"name": "Set Variable1",
 							"type": "SetVariable",
 							"dependsOn": [],
 							"policy": {
@@ -59,9 +59,9 @@
 							},
 							"userProperties": [],
 							"typeProperties": {
-								"variableName": "source_system",
+								"variableName": "test",
 								"value": {
-									"value": "@item().table_id",
+									"value": "@string(item().table_id)",
 									"type": "Expression"
 								}
 							}
@@ -74,6 +74,9 @@
 			"source_system": {
 				"type": "String",
 				"defaultValue": "neon_postgres"
+			},
+			"test": {
+				"type": "String"
 			}
 		},
 		"annotations": []
