@@ -99,6 +99,42 @@
 									{
 										"type": "Query",
 										"text": {
+											"value": "@INSERT INTO ctrl.audit_log(adf_run_id, table_id, stage, status, start_time) VALUES('@{pipeline().parameters.adf_run_id}',@{item().table_id},'source_to_silver','IN_PROGRESS',SYSUTCDATETIME())",
+											"type": "Expression"
+										}
+									}
+								],
+								"scriptBlockExecutionTimeout": "02:00:00"
+							}
+						},
+						{
+							"name": "Update FAILED Status",
+							"type": "Script",
+							"dependsOn": [
+								{
+									"activity": "Ingest from Source to Silver",
+									"dependencyConditions": [
+										"Failed"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 2,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "ls_AzureSqlDatabase",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "Query",
+										"text": {
 											"value": "@INSERT INTO ctrl.audit_log(adf_run_id, table_id, stage, status, start_time) VALUES('A1',@{item().table_id},'source_to_silver','IN_PROGRESS',SYSUTCDATETIME())",
 											"type": "Expression"
 										}
@@ -111,13 +147,14 @@
 				}
 			}
 		],
-		"variables": {
+		"parameters": {
 			"source_system": {
-				"type": "String",
+				"type": "string",
 				"defaultValue": "neon_postgres"
 			},
-			"test": {
-				"type": "String"
+			"adf_run_id": {
+				"type": "string",
+				"defaultValue": "A2"
 			}
 		},
 		"annotations": []
