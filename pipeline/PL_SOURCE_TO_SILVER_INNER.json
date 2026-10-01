@@ -253,7 +253,7 @@
 					},
 					"ifTrueActivities": [
 						{
-							"name": "Check for latest watermark",
+							"name": "Read watermark",
 							"type": "Lookup",
 							"dependsOn": [],
 							"policy": {
@@ -285,7 +285,7 @@
 							"type": "SetVariable",
 							"dependsOn": [
 								{
-									"activity": "Check for latest watermark",
+									"activity": "Read watermark",
 									"dependencyConditions": [
 										"Succeeded"
 									]
