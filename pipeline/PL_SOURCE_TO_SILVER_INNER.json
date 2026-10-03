@@ -52,13 +52,7 @@
 				"type": "Copy",
 				"dependsOn": [
 					{
-						"activity": "Read Table Details",
-						"dependencyConditions": [
-							"Succeeded"
-						]
-					},
-					{
-						"activity": "Set Start Time",
+						"activity": "If load type is not FULL",
 						"dependencyConditions": [
 							"Succeeded"
 						]
@@ -232,6 +226,31 @@
 						}
 					],
 					"scriptBlockExecutionTimeout": "02:00:00"
+				}
+			},
+			{
+				"name": "If load type is not FULL",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Read Table Details",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					},
+					{
+						"activity": "Set Start Time",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@not(\r\n    activity('Read Table Details').output.firstRow.load_type = 'FULL'\r\n    )",
+						"type": "Expression"
+					}
 				}
 			}
 		],
