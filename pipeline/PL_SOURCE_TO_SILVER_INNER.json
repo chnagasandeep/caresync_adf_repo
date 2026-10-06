@@ -298,6 +298,30 @@
 											}
 										}
 									]
+								},
+								{
+									"name": "No of Files Read Variable_copy1",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Ingest CSV from ADLS to Landing",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "files_read",
+										"value": {
+											"value": "@activity('Ingest CSV from ADLS to Landing').output.filesWritten",
+											"type": "Expression"
+										}
+									}
 								}
 							]
 						}
