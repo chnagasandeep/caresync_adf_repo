@@ -208,7 +208,7 @@
 									]
 								},
 								{
-									"name": "No of Files Read Variable",
+									"name": "No of Files Written Variable Tables",
 									"type": "SetVariable",
 									"dependsOn": [
 										{
@@ -300,7 +300,7 @@
 									]
 								},
 								{
-									"name": "No of Files Read Variable_copy1",
+									"name": "No of Files Written Variable CSV",
 									"type": "SetVariable",
 									"dependsOn": [
 										{
@@ -342,7 +342,7 @@
 				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@not(equals(variables('start_time'),0))",
+						"value": "@not(equals(variables('files_read'),0))",
 						"type": "Expression"
 					},
 					"ifFalseActivities": [
