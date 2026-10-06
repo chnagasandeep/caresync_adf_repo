@@ -382,7 +382,47 @@
 							]
 						},
 						{
-							"value": "adls_csv"
+							"value": "adls_csv",
+							"activities": [
+								{
+									"name": "Ingest CSV from ADLS to Landing",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 2,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "BinarySource",
+											"storeSettings": {
+												"type": "AzureBlobFSReadSettings",
+												"recursive": true
+											},
+											"formatSettings": {
+												"type": "BinaryReadSettings"
+											}
+										},
+										"enableStaging": false
+									},
+									"inputs": [
+										{
+											"referenceName": "DS_CSV_Binary",
+											"type": "DatasetReference",
+											"parameters": {
+												"folder": {
+													"value": "@activity('Read Table Details').output.firstRow.source_path",
+													"type": "Expression"
+												}
+											}
+										}
+									]
+								}
+							]
 						}
 					]
 				}
