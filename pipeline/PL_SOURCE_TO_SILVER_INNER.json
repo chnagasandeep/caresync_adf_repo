@@ -299,7 +299,7 @@
 					},
 					"ifFalseActivities": [
 						{
-							"name": "Update SUCCESS Status_copy1",
+							"name": "Update SUCCESS_NO_NEW_DATA Status",
 							"type": "Script",
 							"dependsOn": [],
 							"policy": {
