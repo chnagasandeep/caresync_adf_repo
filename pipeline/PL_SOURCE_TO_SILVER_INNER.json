@@ -206,6 +206,30 @@
 											}
 										}
 									]
+								},
+								{
+									"name": "No of Files Read Variable",
+									"type": "SetVariable",
+									"dependsOn": [
+										{
+											"activity": "Source to Landing Ingestion",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"variableName": "files_read",
+										"value": {
+											"value": "@activity('Source to Landing Ingestion').output.filesWritten",
+											"type": "Expression"
+										}
+									}
 								}
 							]
 						},
@@ -516,6 +540,9 @@
 				"type": "String"
 			},
 			"watermark_value": {
+				"type": "String"
+			},
+			"files_read": {
 				"type": "String"
 			}
 		},
