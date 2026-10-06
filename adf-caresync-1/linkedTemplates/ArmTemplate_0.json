@@ -114,6 +114,43 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/DS_CSV_Binary')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "ls_adls",
+					"type": "LinkedServiceReference"
+				},
+				"parameters": {
+					"folder": {
+						"type": "string"
+					},
+					"container": {
+						"type": "string"
+					}
+				},
+				"annotations": [],
+				"type": "Binary",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": {
+							"value": "@dataset().folder",
+							"type": "Expression"
+						},
+						"fileSystem": {
+							"value": "@dataset().container",
+							"type": "Expression"
+						}
+					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/ls_adls')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/ls_AzureDatabricks')]",
 			"type": "Microsoft.DataFactory/factories/linkedServices",
 			"apiVersion": "2018-06-01",
@@ -191,43 +228,6 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/ls_AzureKeyVault')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/DS_CSV_Binary')]",
-			"type": "Microsoft.DataFactory/factories/datasets",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"linkedServiceName": {
-					"referenceName": "ls_adls",
-					"type": "LinkedServiceReference"
-				},
-				"parameters": {
-					"folder": {
-						"type": "string"
-					},
-					"container": {
-						"type": "string"
-					}
-				},
-				"annotations": [],
-				"type": "Binary",
-				"typeProperties": {
-					"location": {
-						"type": "AzureBlobFSLocation",
-						"folderPath": {
-							"value": "@dataset().folder",
-							"type": "Expression"
-						},
-						"fileSystem": {
-							"value": "@dataset().container",
-							"type": "Expression"
-						}
-					}
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/ls_adls')]"
 			]
 		},
 		{
@@ -390,132 +390,6 @@
 						}
 					},
 					{
-						"name": "Landing to Bronze",
-						"type": "DatabricksNotebook",
-						"dependsOn": [
-							{
-								"activity": "Check Source System",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"notebookPath": "/caresync-repo/caresync_adb_repo/1_landing_to_bronze",
-							"baseParameters": {
-								"source_system": {
-									"value": "@activity('Read Table Details').output.firstRow.source_system",
-									"type": "Expression"
-								},
-								"table_name": {
-									"value": "@activity('Read Table Details').output.firstRow.bronze_table_name",
-									"type": "Expression"
-								},
-								"landing_timestamp": {
-									"value": "@variables('start_time')",
-									"type": "Expression"
-								},
-								"source_file_format": {
-									"value": "@coalesce(activity('Read Table Details').output.firstRow.source_file_format,'')",
-									"type": "Expression"
-								}
-							}
-						},
-						"linkedServiceName": {
-							"referenceName": "ls_AzureDatabricks",
-							"type": "LinkedServiceReference"
-						}
-					},
-					{
-						"name": "Bronze to Silver",
-						"type": "DatabricksNotebook",
-						"dependsOn": [
-							{
-								"activity": "Landing to Bronze",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"notebookPath": "/caresync-repo/caresync_adb_repo/2_bronze_to_silver",
-							"baseParameters": {
-								"table_name": {
-									"value": "@activity('Read Table Details').output.firstRow.silver_table_name",
-									"type": "Expression"
-								},
-								"landing_timestamp": {
-									"value": "@variables('start_time')",
-									"type": "Expression"
-								},
-								"load_type": {
-									"value": "@activity('Read Table Details').output.firstRow.load_type",
-									"type": "Expression"
-								},
-								"merge_keys": {
-									"value": "@coalesce(activity('Read Table Details').output.firstRow.merge_keys,'')",
-									"type": "Expression"
-								}
-							}
-						},
-						"linkedServiceName": {
-							"referenceName": "ls_AzureDatabricks",
-							"type": "LinkedServiceReference"
-						}
-					},
-					{
-						"name": "Update SUCCESS Status",
-						"type": "Script",
-						"dependsOn": [
-							{
-								"activity": "Bronze to Silver",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"policy": {
-							"timeout": "0.12:00:00",
-							"retry": 2,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"linkedServiceName": {
-							"referenceName": "ls_AzureSqlDatabase",
-							"type": "LinkedServiceReference"
-						},
-						"typeProperties": {
-							"scripts": [
-								{
-									"type": "Query",
-									"text": {
-										"value": "UPDATE ctrl.audit_log SET status = 'SUCCESS', end_time = SYSUTCDATETIME(), records_written = @{activity('Bronze to Silver').output.runOutput}\n WHERE adf_run_id = '@{pipeline().parameters.adf_run_id}' and table_id = @{pipeline().parameters.table_id}",
-										"type": "Expression"
-									}
-								}
-							],
-							"scriptBlockExecutionTimeout": "02:00:00"
-						}
-					},
-					{
 						"name": "Check Load Type",
 						"type": "IfCondition",
 						"dependsOn": [
@@ -590,56 +464,6 @@
 											"value": "@activity('Read Watermark Value').output.firstRow.watermark_value",
 											"type": "Expression"
 										}
-									}
-								}
-							]
-						}
-					},
-					{
-						"name": "Check Load Type to Update Watermark",
-						"type": "IfCondition",
-						"dependsOn": [
-							{
-								"activity": "Bronze to Silver",
-								"dependencyConditions": [
-									"Succeeded"
-								]
-							}
-						],
-						"userProperties": [],
-						"typeProperties": {
-							"expression": {
-								"value": "@not(equals(activity('Read Table Details').output.firstRow.load_type,'FULL'))",
-								"type": "Expression"
-							},
-							"ifTrueActivities": [
-								{
-									"name": "Update Watermark",
-									"type": "Script",
-									"dependsOn": [],
-									"policy": {
-										"timeout": "0.12:00:00",
-										"retry": 2,
-										"retryIntervalInSeconds": 30,
-										"secureOutput": false,
-										"secureInput": false
-									},
-									"userProperties": [],
-									"linkedServiceName": {
-										"referenceName": "ls_AzureSqlDatabase",
-										"type": "LinkedServiceReference"
-									},
-									"typeProperties": {
-										"scripts": [
-											{
-												"type": "Query",
-												"text": {
-													"value": "update ctrl.watermark set watermark_value = SYSUTCDATETIME() where table_id = @{pipeline().parameters.table_id}",
-													"type": "Expression"
-												}
-											}
-										],
-										"scriptBlockExecutionTimeout": "02:00:00"
 									}
 								}
 							]
@@ -799,6 +623,227 @@
 								}
 							]
 						}
+					},
+					{
+						"name": "Check for new data in Landing folder",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Check Source System",
+								"dependencyConditions": [
+									"Completed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@not(equals(activity('Check Source System').output.filesWritten,'0'))",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Update SUCCESS_NO_NEW_DATA Status",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 2,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "ls_AzureSqlDatabase",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "UPDATE ctrl.audit_log SET status = 'SUCCESS_NO_NEW_DATA', end_time = SYSUTCDATETIME(), records_written = '0'\n WHERE adf_run_id = '@{pipeline().parameters.adf_run_id}' and table_id = @{pipeline().parameters.table_id}",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Landing to Bronze",
+									"type": "DatabricksNotebook",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": "/caresync-repo/caresync_adb_repo/1_landing_to_bronze",
+										"baseParameters": {
+											"source_system": {
+												"value": "@activity('Read Table Details').output.firstRow.source_system",
+												"type": "Expression"
+											},
+											"table_name": {
+												"value": "@activity('Read Table Details').output.firstRow.bronze_table_name",
+												"type": "Expression"
+											},
+											"landing_timestamp": {
+												"value": "@variables('start_time')",
+												"type": "Expression"
+											},
+											"source_file_format": {
+												"value": "@coalesce(activity('Read Table Details').output.firstRow.source_file_format,'')",
+												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "ls_AzureDatabricks",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "Bronze to Silver",
+									"type": "DatabricksNotebook",
+									"dependsOn": [
+										{
+											"activity": "Landing to Bronze",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"notebookPath": "/caresync-repo/caresync_adb_repo/2_bronze_to_silver",
+										"baseParameters": {
+											"table_name": {
+												"value": "@activity('Read Table Details').output.firstRow.silver_table_name",
+												"type": "Expression"
+											},
+											"landing_timestamp": {
+												"value": "@variables('start_time')",
+												"type": "Expression"
+											},
+											"load_type": {
+												"value": "@activity('Read Table Details').output.firstRow.load_type",
+												"type": "Expression"
+											},
+											"merge_keys": {
+												"value": "@coalesce(activity('Read Table Details').output.firstRow.merge_keys,'')",
+												"type": "Expression"
+											}
+										}
+									},
+									"linkedServiceName": {
+										"referenceName": "ls_AzureDatabricks",
+										"type": "LinkedServiceReference"
+									}
+								},
+								{
+									"name": "Update SUCCESS Status",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "Bronze to Silver",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 2,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "ls_AzureSqlDatabase",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "UPDATE ctrl.audit_log SET status = 'SUCCESS', end_time = SYSUTCDATETIME(), records_written = @{activity('Bronze to Silver').output.runOutput}\n WHERE adf_run_id = '@{pipeline().parameters.adf_run_id}' and table_id = @{pipeline().parameters.table_id}",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Check Load Type to Update Watermark",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Check for new data in Landing folder",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@not(equals(activity('Read Table Details').output.firstRow.load_type,'FULL'))",
+								"type": "Expression"
+							},
+							"ifTrueActivities": [
+								{
+									"name": "Update Watermark",
+									"type": "Script",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 2,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "ls_AzureSqlDatabase",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "update ctrl.watermark set watermark_value = SYSUTCDATETIME() where table_id = @{pipeline().parameters.table_id}",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						}
 					}
 				],
 				"policy": {
@@ -825,8 +870,8 @@
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/datasets/AzureSqlTable1')]",
-				"[concat(variables('factoryId'), '/linkedServices/ls_AzureDatabricks')]",
 				"[concat(variables('factoryId'), '/linkedServices/ls_AzureSqlDatabase')]",
+				"[concat(variables('factoryId'), '/linkedServices/ls_AzureDatabricks')]",
 				"[concat(variables('factoryId'), '/datasets/DS_Postgres')]",
 				"[concat(variables('factoryId'), '/datasets/DS_ADLS_Parquet')]",
 				"[concat(variables('factoryId'), '/datasets/DS_CSV_Binary')]"
