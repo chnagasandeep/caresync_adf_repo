@@ -566,9 +566,6 @@
 			"watermark_value": {
 				"type": "String"
 			},
-			"files_read": {
-				"type": "String"
-			},
 			"files_written": {
 				"type": "Integer"
 			}
