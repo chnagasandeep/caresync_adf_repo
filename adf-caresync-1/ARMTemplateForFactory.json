@@ -279,7 +279,7 @@
 											},
 											"userProperties": [],
 											"typeProperties": {
-												"variableName": "files_read",
+												"variableName": "files_written",
 												"value": {
 													"value": "@activity('Source to Landing Ingestion').output.filesWritten",
 													"type": "Expression"
@@ -371,7 +371,7 @@
 											},
 											"userProperties": [],
 											"typeProperties": {
-												"variableName": "files_read",
+												"variableName": "files_written",
 												"value": {
 													"value": "@activity('Ingest CSV from ADLS to Landing').output.filesWritten",
 													"type": "Expression"
@@ -397,7 +397,7 @@
 						"userProperties": [],
 						"typeProperties": {
 							"expression": {
-								"value": "@not(equals(variables('files_read'),0))",
+								"value": "@not(equals(variables('files_written'),0))",
 								"type": "Expression"
 							},
 							"ifFalseActivities": [
@@ -624,8 +624,8 @@
 					"watermark_value": {
 						"type": "String"
 					},
-					"files_read": {
-						"type": "String"
+					"files_written": {
+						"type": "Integer"
 					}
 				},
 				"annotations": []
